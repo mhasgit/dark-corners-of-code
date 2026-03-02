@@ -1,8 +1,6 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿namespace TodoCli;
 
-namespace TodoCli;
-
-partial class Program
+public class Program
 {
     static void Main(string[] args)
     {

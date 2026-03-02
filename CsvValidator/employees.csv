@@ -1,0 +1,6 @@
+Name,Email,Age
+John Doe,john@example.com,25
+Jane Smith,jane@test.com,17
+Invalid Email,notanemail,30
+Bob Wilson,bob@example.com,150
+,empty@example.com,25

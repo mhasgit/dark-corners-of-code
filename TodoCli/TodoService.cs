@@ -3,131 +3,128 @@ using Newtonsoft.Json;
 
 namespace TodoCli;
 
-partial class Program
+public class TodoService
 {
-    public class TodoService
+    private readonly string _filePath;
+    private List<TodoItem> _todos = new();
+    private int _nextId = 1;
+
+    public TodoService(string filepath)
     {
-        private readonly string _filePath;
-        private List<TodoItem> _todos = new();
-        private int _nextId = 1;
-
-        public TodoService(string filepath)
+        _filePath = filepath ?? throw new ArgumentNullException(nameof(filepath));
+        LoadFromFile();
+    }
+    public void Add(string title)
+    {
+        if (String.IsNullOrEmpty(title))
         {
-            _filePath = filepath ?? throw new ArgumentNullException(nameof(filepath));
-            LoadFromFile();
-        }
-        public void Add(string title)
-        {
-            if (String.IsNullOrEmpty(title))
-            {
-                throw new ArgumentNullException("Title cannot be empty", nameof(title));
-            }
-
-            var todo = new TodoItem
-            {
-                Id = _nextId++,
-                Title = title,
-                isCompleted = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _todos.Add(todo);
-            SaveToFile();
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine($"Added todo #{todo.Id}: {todo.Title}");
+            throw new ArgumentNullException("Title cannot be empty", nameof(title));
         }
 
-        public void List()
+        var todo = new TodoItem
         {
-            if (!_todos.Any())
-            {
-                Console.WriteLine("No todos yet, Add one to get started");
-            }
+            Id = _nextId++,
+            Title = title,
+            isCompleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
 
-            Console.WriteLine("\nYour todos");
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine(new string('-', 50));
+        _todos.Add(todo);
+        SaveToFile();
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine($"Added todo #{todo.Id}: {todo.Title}");
+    }
 
-            foreach (var todo in _todos.OrderBy(t => t.CreatedAt))
-            {
-                var status = todo.isCompleted ? "[✓]" : "[ ]";
-                var date = todo.CreatedAt.ToString("MMM dd, yyyy");
-                Console.WriteLine($"{status}, #{todo.Id}, {todo.Title}, (Created: {date})");
-            }
+    public void List()
+    {
+        if (!_todos.Any())
+        {
+            Console.WriteLine("No todos yet, Add one to get started");
         }
 
-        public void Complete(int id)
-        {
-            var todo = _todos.FirstOrDefault(t => t.Id == id);
-            if (todo == null)
-            {
-                Console.WriteLine($"Todo #{id} not found");
-            }
-            if (todo.isCompleted)
-            {
-                Console.WriteLine($"Todo #{id} is already completed");
-            }
+        Console.WriteLine("\nYour todos");
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine(new string('-', 50));
 
-            todo.isCompleted = true;
-            SaveToFile();
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine($"Completed: {todo.Title}");
+        foreach (var todo in _todos.OrderBy(t => t.CreatedAt))
+        {
+            var status = todo.isCompleted ? "[✓]" : "[ ]";
+            var date = todo.CreatedAt.ToString("MMM dd, yyyy");
+            Console.WriteLine($"{status}, #{todo.Id}, {todo.Title}, (Created: {date})");
+        }
+    }
+
+    public void Complete(int id)
+    {
+        var todo = _todos.FirstOrDefault(t => t.Id == id);
+        if (todo == null)
+        {
+            Console.WriteLine($"Todo #{id} not found");
+        }
+        if (todo.isCompleted)
+        {
+            Console.WriteLine($"Todo #{id} is already completed");
         }
 
-        public void Delete(int id)
+        todo.isCompleted = true;
+        SaveToFile();
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine($"Completed: {todo.Title}");
+    }
+
+    public void Delete(int id)
+    {
+        var todo = _todos.FirstOrDefault(t => t.Id == id);
+
+        if (todo == null)
         {
-            var todo = _todos.FirstOrDefault(t => t.Id == id);
-
-            if (todo == null)
-            {
-                Console.WriteLine($"Todo #{id} not found");
-            }
-            _todos.Remove(todo);
-            SaveToFile();
-
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine($"Deleted {todo.Title}");
+            Console.WriteLine($"Todo #{id} not found");
         }
+        _todos.Remove(todo);
+        SaveToFile();
 
-        private void LoadFromFile()
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine(new string('-', 50));
+        Console.WriteLine($"Deleted {todo.Title}");
+    }
+
+    private void LoadFromFile()
+    {
+        try
         {
-            try
+            if (File.Exists(_filePath))
             {
-                if (File.Exists(_filePath))
+                var json = File.ReadAllText(_filePath);
+                _todos = JsonConvert.DeserializeObject<List<TodoItem>>(json) ?? new List<TodoItem>();
+
+                if (_todos.Any())
                 {
-                    var json = File.ReadAllText(_filePath);
-                    _todos = JsonConvert.DeserializeObject<List<TodoItem>>(json) ?? new List<TodoItem>();
-
-                    if (_todos.Any())
-                    {
-                        _nextId = _todos.Max(t => t.Id) + 1;
-                    }
+                    _nextId = _todos.Max(t => t.Id) + 1;
                 }
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading todos: {ex.Message}");
+            _todos = new List<TodoItem>();
+        }
+    }
+
+    private void SaveToFile()
+    {
+        try
+        {
+            if (File.Exists(_filePath))
             {
-                Console.WriteLine($"Error loading todos: {ex.Message}");
-                _todos = new List<TodoItem>();
+                var json = JsonConvert.SerializeObject(_todos, Formatting.Indented);
+                File.WriteAllText(_filePath, json);
             }
         }
-
-        private void SaveToFile()
+        catch (Exception ex)
         {
-            try
-            {
-                if (File.Exists(_filePath))
-                {
-                    var json = JsonConvert.SerializeObject(_todos, Formatting.Indented);
-                    File.WriteAllText(_filePath, json);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error saving todos: {ex.Message}");
-            }
+            Console.WriteLine($"Error saving todos: {ex.Message}");
         }
     }
 }
