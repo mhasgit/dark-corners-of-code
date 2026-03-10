@@ -119,33 +119,32 @@ class Order
 
     public List<OrderState> GetAvailableTransition()
     {
-        // return State switch
+        return State switch
+        {
+            OrderState.Created => new List<OrderState> { OrderState.Paid, OrderState.Cancelled },
+            OrderState.Paid => new List<OrderState> { OrderState.Shipped, OrderState.Cancelled },
+            OrderState.Shipped => new List<OrderState> { },
+            OrderState.Cancelled => new List<OrderState> { },
+            _ => new List<OrderState> { }
+        };
+
+        // if (State == OrderState.Created)
         // {
-        //     OrderState.Created => new List<OrderState> { OrderState.Paid, OrderState.Cancelled },
-        //     OrderState.Paid => new List<OrderState> { OrderState.Shipped, OrderState.Cancelled },
-        //     OrderState.Shipped => new List<OrderState> { },
-        //     OrderState.Cancelled => new List<OrderState> { },
-        //     _ => new List<OrderState> { }
-        // };
-
-
-        if (State == OrderState.Created)
-        {
-            return new List<OrderState> { OrderState.Paid, OrderState.Cancelled };
-        }
-        else if (State == OrderState.Paid)
-        {
-            return new List<OrderState> { OrderState.Shipped, OrderState.Cancelled };
-        }
-        if (State == OrderState.Shipped)
-        {
-            return new List<OrderState> { };
-        }
-        if (State == OrderState.Cancelled)
-        {
-            return new List<OrderState> { };
-        }
-        return new List<OrderState>();
+        //     return new List<OrderState> { OrderState.Paid, OrderState.Cancelled };
+        // }
+        // else if (State == OrderState.Paid)
+        // {
+        //     return new List<OrderState> { OrderState.Shipped, OrderState.Cancelled };
+        // }
+        // if (State == OrderState.Shipped)
+        // {
+        //     return new List<OrderState> { };
+        // }
+        // if (State == OrderState.Cancelled)
+        // {
+        //     return new List<OrderState> { };
+        // }
+        // return new List<OrderState>();
     }
 
     public override string ToString()

@@ -16,7 +16,7 @@ public class TodoService
     }
     public void Add(string title)
     {
-        if (String.IsNullOrEmpty(title))
+        if (string.IsNullOrEmpty(title))
         {
             throw new ArgumentNullException("Title cannot be empty", nameof(title));
         }
@@ -94,10 +94,10 @@ public class TodoService
     {
         try
         {
-            if (File.Exists(_filePath))
+            if (!File.Exists(_filePath))
             {
                 var json = File.ReadAllText(_filePath);
-                _todos = JsonConvert.DeserializeObject<List<TodoItem>>(json) ?? new List<TodoItem>();
+                var _todos = JsonConvert.DeserializeObject<List<TodoItem>>(json) ?? new List<TodoItem>();
 
                 if (_todos.Any())
                 {
